@@ -1,0 +1,28 @@
+{
+  "name": "jeevanseva",
+  "version": "1.0.0",
+  "description": "JeevanSeva - Healthcare Near You, When You Need It",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"blue.bold,green.bold\" \"npm run server\" \"npm run client\"",
+    "server": "cd server && node server.js",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && node server.js",
+    "db:migrate": "cd server && npx sequelize-cli db:migrate",
+    "db:seed": "cd server && node seeders/seedAll.js"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "healthcare",
+    "hospital-finder",
+    "doctor-finder",
+    "jeevanseva"
+  ],
+  "license": "ISC"
+}

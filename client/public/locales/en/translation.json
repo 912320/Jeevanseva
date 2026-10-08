@@ -1,0 +1,108 @@
+{
+  "nav": {
+    "home": "Home",
+    "findHospital": "Find Hospital",
+    "findDoctor": "Find Doctor",
+    "medicines": "Medicines",
+    "healthInfo": "Health Info",
+    "emergency": "Emergency",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "hero": {
+    "title": "Find Healthcare Near You",
+    "subtitle": "Discover nearby hospitals, doctors, pharmacies and healthcare services in your area.",
+    "searchPlaceholder": "Search for diseases, symptoms, doctors, hospitals...",
+    "useLocation": "Use My Location"
+  },
+  "features": {
+    "findHospital": {
+      "title": "Find Hospital",
+      "desc": "Locate nearby hospitals, check departments, emergency services"
+    },
+    "findDoctor": {
+      "title": "Find Doctor",
+      "desc": "Search doctors by specialty, book appointments"
+    },
+    "medicines": {
+      "title": "Medicines",
+      "desc": "Search medicine information, find pharmacies"
+    },
+    "healthInfo": {
+      "title": "Health Info",
+      "desc": "Learn about diseases, symptoms and when to see a doctor"
+    },
+    "emergency": {
+      "title": "Emergency",
+      "desc": "Quick access to emergency services and hospitals"
+    },
+    "pharmacy": {
+      "title": "Nearby Pharmacy",
+      "desc": "Find pharmacies near you"
+    }
+  },
+  "howItWorks": {
+    "step1": {
+      "title": "Enter your location",
+      "desc": "Let us know where you are looking for healthcare services."
+    },
+    "step2": {
+      "title": "Search your health need",
+      "desc": "Type what you are looking for - a symptom, doctor or hospital."
+    },
+    "step3": {
+      "title": "Find healthcare near you",
+      "desc": "Get instant results tailored to your specific needs."
+    }
+  },
+  "auth": {
+    "login": "Login to your account",
+    "register": "Register an account",
+    "email": "Email Address",
+    "password": "Password",
+    "name": "Full Name",
+    "phone": "Phone Number",
+    "role": "Select your role",
+    "patient": "Patient",
+    "doctor": "Doctor",
+    "hospital": "Hospital",
+    "loginBtn": "Sign In",
+    "registerBtn": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "forgotPassword": "Forgot your password?"
+  },
+  "disclaimer": {
+    "medical": "JeevanSeva does not replace a qualified doctor. Information provided is for general educational purposes only. Always seek professional medical advice.",
+    "emergency": "For medical emergencies, please call emergency services immediately."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "noResults": "No results found",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "confirm": "Confirm"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidPhone": "Please enter a valid phone number",
+    "passwordMin": "Password must be at least 6 characters",
+    "passwordMatch": "Passwords do not match",
+    "serverError": "Something went wrong on the server",
+    "notFound": "Page Not Found",
+    "unauthorized": "You are not authorized to view this page"
+  }
+}
