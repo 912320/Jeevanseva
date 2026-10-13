@@ -14,7 +14,13 @@ const Home = () => {
     const query = searchQuery.trim().toLowerCase();
 
     // Contextual routing based on search intent
-    if (query.includes('doctor') || query.includes('specialist') || query.includes('physician') || query.includes('dentist') || query.includes('cardiologist')) {
+    if (query.includes('child') || query.includes('pediatric') || query.includes('kid') || query.includes('baby') || query.includes('bachha')) {
+      navigate(`/doctors?specialization=Pediatrics`);
+    } else if (query.includes('heart') || query.includes('cardio')) {
+      navigate(`/doctors?specialization=Cardiology`);
+    } else if (query.includes('skin') || query.includes('derma')) {
+      navigate(`/doctors?specialization=Dermatology`);
+    } else if (query.includes('doctor') || query.includes('specialist') || query.includes('physician') || query.includes('dentist') || query.includes('cardiologist')) {
       navigate(`/doctors?search=${encodeURIComponent(searchQuery)}`);
     } else if (query.includes('fever') || query.includes('cough') || query.includes('pain') || query.includes('diabetes') || query.includes('dengue') || query.includes('asthma')) {
       navigate(`/diseases?search=${encodeURIComponent(searchQuery)}`);
@@ -30,9 +36,9 @@ const Home = () => {
   const suggestions = [
     { label: 'Fever', route: '/diseases?search=Fever' },
     { label: 'Diabetes', route: '/diseases?search=Diabetes' },
-    { label: 'Heart Specialist', route: '/doctors?search=Cardiology' },
-    { label: 'Child Specialist', route: '/doctors?search=Pediatrics' },
-    { label: 'Skin Problem', route: '/doctors?search=Dermatology' },
+    { label: 'Heart Specialist', route: '/doctors?specialization=Cardiology' },
+    { label: 'Child Specialist', route: '/doctors?specialization=Pediatrics' },
+    { label: 'Skin Problem', route: '/doctors?specialization=Dermatology' },
     { label: 'AIIMS Hospital', route: '/hospitals?search=AIIMS' },
     { label: 'Emergency Care', route: '/emergency' },
     { label: '24/7 Pharmacy', route: '/pharmacies' }

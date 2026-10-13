@@ -8,8 +8,20 @@ const DoctorSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [specialization, setSpecialization] = useState('all');
+  const urlSearch = searchParams.get('search') || '';
+  const urlSpec = searchParams.get('specialization') || searchParams.get('spec') || '';
+
+  // Determine initial specialization
+  const getInitialSpecialization = () => {
+    if (urlSpec && urlSpec !== 'all') return urlSpec;
+    if (urlSearch.toLowerCase().includes('child') || urlSearch.toLowerCase().includes('pediatric')) return 'Pediatrics';
+    if (urlSearch.toLowerCase().includes('heart') || urlSearch.toLowerCase().includes('cardio')) return 'Cardiology';
+    if (urlSearch.toLowerCase().includes('skin') || urlSearch.toLowerCase().includes('derma')) return 'Dermatology';
+    return 'all';
+  };
+
+  const [search, setSearch] = useState(urlSearch);
+  const [specialization, setSpecialization] = useState(getInitialSpecialization());
   const [maxFee, setMaxFee] = useState('');
   const [minExp, setMinExp] = useState('');
   const [userCoords, setUserCoords] = useState(null);
@@ -21,6 +33,26 @@ const DoctorSearch = () => {
   const cityParam = searchParams.get('city');
   const latParam = searchParams.get('lat');
   const lngParam = searchParams.get('lng');
+
+  // Synchronize state when URL params change
+  useEffect(() => {
+    const sParam = searchParams.get('search') || '';
+    const spParam = searchParams.get('specialization') || searchParams.get('spec') || '';
+    if (spParam && spParam !== 'all') {
+      setSpecialization(spParam);
+    } else if (sParam.toLowerCase().includes('child') || sParam.toLowerCase().includes('pediatric')) {
+      setSpecialization('Pediatrics');
+    } else if (sParam.toLowerCase().includes('heart') || sParam.toLowerCase().includes('cardio')) {
+      setSpecialization('Cardiology');
+    } else if (sParam.toLowerCase().includes('skin') || sParam.toLowerCase().includes('derma')) {
+      setSpecialization('Dermatology');
+    } else if (spParam === 'all') {
+      setSpecialization('all');
+    }
+    if (sParam && !sParam.toLowerCase().includes('child') && !sParam.toLowerCase().includes('pediatric')) {
+      setSearch(sParam);
+    }
+  }, [searchParams]);
 
   const specializationsList = [
     'All Specializations',
@@ -41,7 +73,7 @@ const DoctorSearch = () => {
     try {
       const params = {};
       if (search) params.search = search;
-      if (specialization !== 'all' && specialization !== 'All Specializations') {
+      if (specialization !== 'all' && specialization !== 'All Specializations' && specialization) {
         params.specialization = specialization;
       }
       if (maxFee) params.maxFee = maxFee;
@@ -66,7 +98,34 @@ const DoctorSearch = () => {
       }
 
       const res = await api.get('/doctors', { params });
-      setDoctors(res.data.data || []);
+      let list = res.data.data || [];
+
+      // Ensure Child Specialist / requested specialization doctors are sorted FIRST!
+      const target = (specialization && specialization !== 'all') 
+        ? specialization.toLowerCase() 
+        : (search ? search.toLowerCase() : '');
+
+      if (target) {
+        list.sort((a, b) => {
+          const aMatch = (a.DoctorSpecializations || []).some(s => 
+            s.specialization && (
+              s.specialization.toLowerCase().includes(target) ||
+              (target.includes('child') && s.specialization.toLowerCase().includes('pediatric'))
+            )
+          );
+          const bMatch = (b.DoctorSpecializations || []).some(s => 
+            s.specialization && (
+              s.specialization.toLowerCase().includes(target) ||
+              (target.includes('child') && s.specialization.toLowerCase().includes('pediatric'))
+            )
+          );
+          if (aMatch && !bMatch) return -1;
+          if (!aMatch && bMatch) return 1;
+          return 0;
+        });
+      }
+
+      setDoctors(list);
     } catch (err) {
       console.error('Error loading doctors:', err);
       toast.error('Failed to load doctors list. Please ensure backend server is running.');

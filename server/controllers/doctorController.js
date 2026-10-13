@@ -18,10 +18,19 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 exports.getAllDoctors = async (req, res, next) => {
   try {
-    const { search, specialization, minExp, maxFee, verified, city, lat, lng, radius, hospitalId } = req.query;
+    let { search, specialization, minExp, maxFee, verified, city, lat, lng, radius, hospitalId } = req.query;
     const userWhere = {};
     const doctorWhere = {};
     const specWhere = {};
+
+    // Map common aliases (child specialist -> Pediatrics)
+    if (search && (search.toLowerCase().includes('child') || search.toLowerCase().includes('pediatric') || search.toLowerCase().includes('kid') || search.toLowerCase().includes('baby'))) {
+      if (!specialization || specialization === 'all') {
+        specialization = 'Pediatrics';
+      }
+    } else if (specialization && (specialization.toLowerCase().includes('child') || specialization.toLowerCase().includes('pediatric'))) {
+      specialization = 'Pediatrics';
+    }
 
     if (search) {
       userWhere[Op.or] = [
@@ -151,21 +160,46 @@ exports.getAllDoctors = async (req, res, next) => {
       return data;
     });
 
-    if (lat && lng) {
-      results.sort((a, b) => {
+    const targetSpec = (specialization && specialization !== 'all') 
+      ? specialization.toLowerCase() 
+      : (search ? search.toLowerCase() : '');
+
+    results.sort((a, b) => {
+      // Priority 1: Specialists matching requested specialization/search appear first!
+      if (targetSpec) {
+        const aMatch = (a.DoctorSpecializations || []).some(s => 
+          s.specialization && (
+            s.specialization.toLowerCase().includes(targetSpec) ||
+            (targetSpec.includes('child') && s.specialization.toLowerCase().includes('pediatric'))
+          )
+        );
+        const bMatch = (b.DoctorSpecializations || []).some(s => 
+          s.specialization && (
+            s.specialization.toLowerCase().includes(targetSpec) ||
+            (targetSpec.includes('child') && s.specialization.toLowerCase().includes('pediatric'))
+          )
+        );
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+      }
+
+      // Priority 2: Distance if coordinates provided
+      if (lat && lng) {
         if (a.distance === null && b.distance === null) return 0;
         if (a.distance === null) return 1;
         if (b.distance === null) return -1;
         return a.distance - b.distance;
-      });
+      }
 
-      if (radius) {
-        const rad = parseFloat(radius);
-        const filtered = results.filter(d => d.distance !== null && d.distance <= rad);
-        // If radius is too tight and no doctors found, we still return the closest ones or filtered
-        if (filtered.length > 0) {
-          results = filtered;
-        }
+      // Priority 3: Rating and Experience
+      return (b.rating || 0) - (a.rating || 0);
+    });
+
+    if (lat && lng && radius) {
+      const rad = parseFloat(radius);
+      const filtered = results.filter(d => d.distance !== null && d.distance <= rad);
+      if (filtered.length > 0) {
+        results = filtered;
       }
     }
 
