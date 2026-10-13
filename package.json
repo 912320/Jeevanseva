@@ -10,7 +10,8 @@
     "build": "cd client && npm run build",
     "start": "cd server && node server.js",
     "db:migrate": "cd server && npx sequelize-cli db:migrate",
-    "db:seed": "cd server && node seeders/seedAll.js"
+    "db:seed": "cd server && node seeders/seedAll.js",
+    "share": "node tunnel.js"
   },
   "dependencies": {
     "concurrently": "^8.2.2"
@@ -24,5 +25,8 @@
     "doctor-finder",
     "jeevanseva"
   ],
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  }
 }

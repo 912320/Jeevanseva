@@ -9,14 +9,30 @@ const { generalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
-app.use(helmet());
+const path = require('path');
+const fs = require('fs');
+
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(generalLimiter);
 
+// API routes
 app.use('/api', routes);
+
+// Serve static frontend in production
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.use((req, res, next) => {
   const error = new Error('Not Found');
