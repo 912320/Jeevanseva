@@ -234,16 +234,34 @@ exports.getAllHospitals = async (req, res, next) => {
       return data;
     });
 
-    if (lat && lng) {
-      results.sort((a, b) => {
+    const searchLower = (search || '').trim().toLowerCase();
+
+    results.sort((a, b) => {
+      // Priority 1: Exact or name match with search term (e.g. AIIMS) ALWAYS first!
+      if (searchLower) {
+        const aMatch = (a.name && a.name.toLowerCase().includes(searchLower));
+        const bMatch = (b.name && b.name.toLowerCase().includes(searchLower));
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+      }
+
+      // Priority 2: Distance if coordinates available
+      if (lat && lng) {
+        if (a.distance === null && b.distance === null) return 0;
         if (a.distance === null) return 1;
         if (b.distance === null) return -1;
         return a.distance - b.distance;
-      });
+      }
 
-      if (radius) {
-        const rad = parseFloat(radius);
-        results = results.filter(h => h.distance !== null && h.distance <= rad);
+      // Priority 3: Rating and Name
+      return (b.rating || 0) - (a.rating || 0);
+    });
+
+    if (lat && lng && radius) {
+      const rad = parseFloat(radius);
+      const filtered = results.filter(h => h.distance !== null && h.distance <= rad);
+      if (filtered.length > 0) {
+        results = filtered;
       }
     }
 

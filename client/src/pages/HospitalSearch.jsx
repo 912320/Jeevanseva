@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { FaHospital, FaPhoneAlt, FaMapMarkerAlt, FaStar, FaDirections, FaAmbulance, FaSearch, FaCrosshairs, FaUserMd } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 const HospitalSearch = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSearch = searchParams.get('search') || '';
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(urlSearch);
   const [type, setType] = useState('all');
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [radius, setRadius] = useState('200');
@@ -15,11 +17,18 @@ const HospitalSearch = () => {
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [syncingGoogle, setSyncingGoogle] = useState(false);
 
+  // Sync state when URL params change (e.g. clicking AIIMS from home)
+  useEffect(() => {
+    const s = searchParams.get('search') || '';
+    setSearch(s);
+  }, [searchParams]);
+
   const fetchHospitals = async (coords = userCoords) => {
     setLoading(true);
     try {
+      const activeSearch = search || searchParams.get('search') || '';
       const params = {};
-      if (search) params.search = search;
+      if (activeSearch) params.search = activeSearch;
       if (type !== 'all') params.type = type;
       if (emergencyOnly) params.emergency = 'true';
       if (coords) {
@@ -28,7 +37,22 @@ const HospitalSearch = () => {
         params.radius = radius;
       }
       const res = await api.get('/hospitals', { params });
-      setHospitals(res.data.data || []);
+      let list = res.data.data || [];
+
+      // Priority sort: hospitals matching the search name (e.g. AIIMS) ALWAYS appear first!
+      const q = activeSearch.trim().toLowerCase();
+      if (q) {
+        list.sort((a, b) => {
+          const aNameMatch = (a.name && a.name.toLowerCase().includes(q));
+          const bNameMatch = (b.name && b.name.toLowerCase().includes(q));
+          if (aNameMatch && !bNameMatch) return -1;
+          if (!aNameMatch && bNameMatch) return 1;
+          if (a.distance !== null && b.distance !== null) return a.distance - b.distance;
+          return (b.rating || 0) - (a.rating || 0);
+        });
+      }
+
+      setHospitals(list);
     } catch (err) {
       console.error('Error loading hospitals:', err);
       toast.error('Failed to load hospitals. Please ensure backend server is running.');
@@ -53,7 +77,7 @@ const HospitalSearch = () => {
     } else {
       fetchHospitals(userCoords);
     }
-  }, [type, emergencyOnly, radius]);
+  }, [searchParams, type, emergencyOnly, radius]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
