@@ -151,7 +151,7 @@ const MedicineCard = ({ medicine }) => (
       <Link to={`/medicines?search=${encodeURIComponent(medicine.name)}`} className="flex-1 flex items-center justify-center gap-1 text-xs bg-purple-50 text-purple-700 border border-purple-200 rounded-lg py-1.5 hover:bg-purple-100 transition-colors">
         More Info
       </Link>
-      <Link to="/pharmacies" className="flex-1 flex items-center justify-center gap-1 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-lg py-1.5 hover:bg-gray-100 transition-colors">
+      <Link to={`/pharmacies?medicine=${encodeURIComponent(medicine.name)}`} className="flex-1 flex items-center justify-center gap-1 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-lg py-1.5 hover:bg-gray-100 transition-colors">
         Find Pharmacy
       </Link>
     </div>

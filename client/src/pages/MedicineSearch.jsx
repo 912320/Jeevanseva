@@ -175,10 +175,10 @@ const MedicineSearch = () => {
                 {/* Footer Link to Pharmacies */}
                 <div className="mt-5 pt-3 border-t border-gray-100 flex items-center gap-2">
                   <Link
-                    to={`/pharmacies?search=${encodeURIComponent(m.name)}`}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-gray-50 hover:bg-emerald-50 hover:text-emerald-700 text-gray-700 border border-gray-200 rounded-lg text-xs font-semibold transition-colors"
+                    to={`/pharmacies?medicine=${encodeURIComponent(m.name)}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold transition-colors"
                   >
-                    <FaStore />
+                    <FaStore className="text-emerald-600" />
                     Find in Pharmacies
                   </Link>
                   <a

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { FaStore, FaPhoneAlt, FaMapMarkerAlt, FaDirections, FaSearch, FaClock, FaTruck, FaCrosshairs } from 'react-icons/fa';
+import { FaStore, FaPhoneAlt, FaMapMarkerAlt, FaDirections, FaSearch, FaClock, FaTruck, FaCrosshairs, FaPills } from 'react-icons/fa';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
@@ -8,18 +8,29 @@ const PharmacySearch = () => {
   const [searchParams] = useSearchParams();
   const [pharmacies, setPharmacies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [medicineName, setMedicineName] = useState(searchParams.get('medicine') || '');
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [is24Hours, setIs24Hours] = useState(false);
   const [homeDelivery, setHomeDelivery] = useState(false);
   const [userCoords, setUserCoords] = useState(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [radius, setRadius] = useState('200');
+  const [isBeyondRadius, setIsBeyondRadius] = useState(false);
+
+  // Sync state if URL params change
+  useEffect(() => {
+    const med = searchParams.get('medicine') || '';
+    const s = searchParams.get('search') || '';
+    if (med) setMedicineName(med);
+    if (s && !med) setSearch(s);
+  }, [searchParams]);
 
   const fetchPharmacies = async (coords = userCoords) => {
     setLoading(true);
     try {
       const params = {};
       if (search) params.search = search;
+      if (medicineName) params.medicine = medicineName;
       if (is24Hours) params.is_24_hours = 'true';
       if (homeDelivery) params.home_delivery = 'true';
       if (coords) {
@@ -29,6 +40,7 @@ const PharmacySearch = () => {
       }
       const res = await api.get('/pharmacies', { params });
       setPharmacies(res.data.data || []);
+      setIsBeyondRadius(Boolean(res.data.meta?.is_beyond_radius));
     } catch (err) {
       toast.error('Failed to load pharmacies.');
     } finally {
@@ -52,7 +64,7 @@ const PharmacySearch = () => {
     } else {
       fetchPharmacies(userCoords);
     }
-  }, [is24Hours, homeDelivery, radius, searchParams]);
+  }, [is24Hours, homeDelivery, radius, medicineName]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -84,6 +96,11 @@ const PharmacySearch = () => {
     );
   };
 
+  const handleClearMedicine = () => {
+    setMedicineName('');
+    window.history.replaceState({}, '', '/pharmacies');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -95,9 +112,37 @@ const PharmacySearch = () => {
             Find Pharmacies & Medical Stores
           </h1>
           <p className="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">
-            Locate 24/7 chemists, Jan Aushadhi Kendras, and local pharmacies with home delivery.
+            Locate 24/7 chemists, Jan Aushadhi Kendras, and local pharmacies stocking your medicines.
           </p>
         </div>
+
+        {/* Active Medicine Banner */}
+        {medicineName && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-emerald-600 text-white p-2.5 rounded-xl shadow-sm flex-shrink-0">
+                <FaPills className="text-xl" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 flex-wrap">
+                  <span>Pharmacies Stocking:</span>
+                  <span className="text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full font-extrabold text-sm">
+                    {medicineName}
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Showing licensed retail pharmacies & Jan Aushadhi Kendras verified for genuine medicines and generic equivalents.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleClearMedicine}
+              className="text-xs bg-white text-gray-700 hover:text-red-700 border border-gray-300 hover:border-red-300 px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm whitespace-nowrap self-start sm:self-center"
+            >
+              ✕ Clear Medicine Filter
+            </button>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8">
@@ -108,7 +153,7 @@ const PharmacySearch = () => {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search pharmacy by name, medicine, area, or city..."
+                placeholder="Search pharmacy by name, area, city (e.g. Bhopal, Jamshedpur, Apollo)..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 outline-none"
               />
             </div>
@@ -171,12 +216,31 @@ const PharmacySearch = () => {
                   <option value="100">100 km</option>
                   <option value="150">150 km</option>
                   <option value="200">200 km (Regional)</option>
-                  <option value="">All Distances</option>
+                  <option value="">All Distances (Pan-India)</option>
                 </select>
               </div>
             )}
           </div>
         </div>
+
+        {/* Radius Fallback Notice */}
+        {isBeyondRadius && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900 shadow-sm">
+            <div className="flex items-center gap-2">
+              <FaMapMarkerAlt className="text-amber-600 text-base flex-shrink-0" />
+              <span>
+                No stores found within <strong>{radius} km</strong> of your coordinates. Showing the <strong>closest licensed pharmacies in India</strong> sorted by proximity.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRadius('')}
+              className="font-bold underline text-amber-800 hover:text-amber-950 whitespace-nowrap self-start sm:self-center"
+            >
+              Switch to All Distances
+            </button>
+          </div>
+        )}
 
         {/* Pharmacy Cards */}
         {loading ? (
@@ -187,7 +251,7 @@ const PharmacySearch = () => {
           <div className="text-center py-16 bg-white rounded-xl border border-gray-200 p-8">
             <FaStore className="mx-auto text-5xl text-gray-300 mb-4" />
             <h3 className="text-xl font-bold text-gray-800">No Pharmacies Found</h3>
-            <p className="text-gray-600 mt-2">Try changing your search terms, increasing radius, or clearing 24/7 filters.</p>
+            <p className="text-gray-600 mt-2">Try clearing filters or switching to "All Distances".</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -197,7 +261,7 @@ const PharmacySearch = () => {
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-5 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
                     {pharmacy.is_24_hours ? (
                       <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded text-xs font-bold flex items-center gap-1">
                         <FaClock /> 24 Hours Open
@@ -209,7 +273,11 @@ const PharmacySearch = () => {
                     )}
 
                     {pharmacy.distance !== null && pharmacy.distance !== undefined && (
-                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2 py-0.5 rounded font-bold">
+                      <span className={`text-xs px-2 py-0.5 rounded font-bold border ${
+                        pharmacy.is_outside_radius
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
                         📍 {pharmacy.distance} km away
                       </span>
                     )}
@@ -224,6 +292,13 @@ const PharmacySearch = () => {
                   <h3 className="text-lg font-bold text-gray-900 leading-snug">
                     {pharmacy.name}
                   </h3>
+
+                  {pharmacy.stocks_medicine && (
+                    <div className="mt-2 inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded text-xs font-semibold">
+                      <FaPills className="text-emerald-600 text-[10px]" />
+                      Stocks {pharmacy.requested_medicine || 'Medications'}
+                    </div>
+                  )}
 
                   <div className="mt-3 flex items-start gap-2 text-sm text-gray-600">
                     <FaMapMarkerAlt className="text-gray-400 mt-1 flex-shrink-0" />
