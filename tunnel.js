@@ -1,35 +1,23 @@
 const { spawn } = require('child_process');
+const path = require('path');
 
-console.log('🚀 Starting JeevanSeva Public Internet Link...');
+process.env.PATH = `${process.env.PATH};C:\\Program Files (x86)\\cloudflared;C:\\Program Files\\cloudflared`;
 
-const ssh = spawn('ssh', [
-  '-o', 'StrictHostKeyChecking=no',
-  '-R', '80:127.0.0.1:5000',
-  'nokey@localhost.run'
-]);
+console.log('🚀 Starting Cloudflare Tunnel for JeevanSeva...');
 
-ssh.stdout.on('data', (data) => {
+const cloudflared = spawn('cloudflared', ['tunnel', '--url', 'http://127.0.0.1:5000']);
+
+cloudflared.stderr.on('data', (data) => {
   const text = data.toString();
-  const match = text.match(/https:\/\/[a-zA-Z0-9]+\.lhr\.life/);
+  const match = text.match(/https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/);
   if (match) {
     console.log('\n============================================================');
-    console.log('🎉 YOUR WEBSITE IS LIVE ON THE INTERNET:');
+    console.log('🎉 YOUR WEBSITE IS LIVE ON CLOUDFLARE:');
     console.log('👉', match[0]);
     console.log('============================================================\n');
   }
 });
 
-ssh.stderr.on('data', (data) => {
-  const text = data.toString();
-  const match = text.match(/https:\/\/[a-zA-Z0-9]+\.lhr\.life/);
-  if (match) {
-    console.log('\n============================================================');
-    console.log('🎉 YOUR WEBSITE IS LIVE ON THE INTERNET:');
-    console.log('👉', match[0]);
-    console.log('============================================================\n');
-  }
-});
-
-ssh.on('close', () => {
+cloudflared.on('close', () => {
   console.log('Tunnel closed.');
 });
